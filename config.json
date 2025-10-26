@@ -1,0 +1,11 @@
+{
+  "data_directory": "data",
+  "historical_days": 365,
+  "api_key": null,
+  "api_secret": null,
+  "notes": {
+    "api_keys": "API keys are optional - Binance allows public market data access without authentication",
+    "symbols_filter": "To collect specific symbols only, use --symbols flag when running the collector",
+    "rate_limiting": "The collector automatically handles rate limiting with 0.5s delays between requests"
+  }
+}

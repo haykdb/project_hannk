@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "binance-eod-collector"
+version = "0.1.0"
+description = "Collect End-of-Day market data (Price, Volume, Market Cap) for all Binance Spot trading pairs"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "binance_eod_collector", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-binance = "^1.0.19"
+pandas = "^2.0.0"
+numpy = "^1.24.0"
+requests = "^2.31.0"
+python-dateutil = "^2.8.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.7.0"
+ruff = "^0.0.285"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+collect-data = "binance_eod_collector.main:main"
+update-data = "binance_eod_collector.main:update"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

@@ -1,0 +1,143 @@
+BINANCE EOD DATA COLLECTOR - PROJECT STRUCTURE
+===============================================
+
+binance-eod-collector/
+│
+├── pyproject.toml                 # Poetry configuration & dependencies
+├── config.json                    # Configuration file (optional)
+├── setup.sh                       # Quick setup script
+│
+├── README.md                      # Full documentation
+├── QUICKSTART.md                  # Quick start guide
+├── .gitignore                     # Git ignore rules
+│
+├── src/
+│   └── binance_eod_collector/     # Main package
+│       ├── __init__.py            # Package initialization
+│       ├── collector.py           # Core data collection logic
+│       └── main.py                # CLI entry point
+│
+├── examples/
+│   └── ml_preprocessing_example.py # Example ML preprocessing
+│
+└── data/                          # Output directory (auto-created)
+    └── all_pairs_eod.csv         # Collected EOD data
+
+
+KEY FILES
+=========
+
+pyproject.toml
+- Poetry dependency management
+- Package metadata
+- CLI command definitions (collect-data, update-data)
+
+collector.py
+- BinanceEODCollector class
+- Methods for data collection
+- Rate limiting and error handling
+
+main.py
+- Command-line interface
+- Entry points for data collection and updates
+
+config.json
+- Optional configuration
+- Can set default data directory, API keys, etc.
+
+
+COMMANDS
+========
+
+Setup:
+  poetry install                    # Install dependencies
+  ./setup.sh                        # Run setup script
+
+Data Collection:
+  poetry run collect-data           # Collect all pairs, 365 days
+  poetry run collect-data --days 30 --max-symbols 10  # Test run
+  poetry run collect-data --symbols BTCUSDT ETHUSDT   # Specific pairs
+
+Daily Updates:
+  poetry run update-data            # Update all pairs
+  poetry run update-data --symbols BTCUSDT  # Update specific pairs
+
+Examples:
+  poetry run python examples/ml_preprocessing_example.py
+
+
+WORKFLOW
+========
+
+1. Initial Setup:
+   - Install Poetry
+   - Run: poetry install
+   - Run: poetry run collect-data --days 365
+
+2. Daily Operations:
+   - Set up cron/scheduler for: poetry run update-data
+   - Data automatically appends to all_pairs_eod.csv
+
+3. ML Model Development:
+   - Load data from data/all_pairs_eod.csv
+   - Use examples/ml_preprocessing_example.py as reference
+   - Build your trading weight generation model
+
+
+DATA SPECIFICATIONS
+===================
+
+Source: Binance Spot Market (all trading pairs)
+Frequency: End-of-Day (daily OHLCV data)
+API: Binance Public REST API (no authentication required)
+Rate Limits: 1200 requests/min (handled automatically)
+
+Output Columns:
+- date: Trading date
+- symbol: Trading pair (BTCUSDT, ETHUSDT, etc.)
+- open, high, low, close: OHLC prices
+- volume: Base asset volume
+- quote_volume: Quote asset volume (USD, BTC, etc.)
+- trades: Number of trades
+- market_cap_proxy: Price × Volume (liquidity measure)
+
+
+FEATURES
+========
+
+✓ Automatic discovery of all Binance Spot pairs
+✓ Historical data collection (up to 365+ days)
+✓ Efficient daily updates
+✓ No API keys required
+✓ Rate limiting (0.5s between requests)
+✓ Duplicate detection and removal
+✓ CSV output format
+✓ Poetry dependency management
+✓ CLI commands
+✓ Example ML preprocessing code
+
+
+DEPENDENCIES
+============
+
+Core:
+- python-binance: Binance API wrapper
+- pandas: Data manipulation
+- numpy: Numerical operations
+- requests: HTTP requests
+- python-dateutil: Date handling
+
+Development:
+- pytest: Testing
+- black: Code formatting
+- ruff: Linting
+
+
+NOTES
+=====
+
+- API keys are optional (public data endpoints)
+- Full collection of 2000+ pairs takes 20-30 minutes
+- Data updates should run after 00:00 UTC daily
+- Market cap proxy is not true market cap (requires supply data)
+- Binance Spot only (not futures/derivatives)
