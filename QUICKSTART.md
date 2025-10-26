@@ -1,200 +1,164 @@
 # Quick Start Guide
 
-Get up and running with Binance EOD Data Collector in 5 minutes!
+Get up and running with the Crypto Data Collector in 5 minutes!
 
-## Prerequisites
-
-- Python 3.9 or higher
-- Poetry (Python dependency manager)
-
-### Install Poetry
-
-**Linux/Mac/WSL:**
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-**Windows (PowerShell):**
-```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-```
-
-Or visit: https://python-poetry.org/docs/#installation
-
-## Setup (2 minutes)
+## Step 1: Install Dependencies
 
 ```bash
-# Navigate to project directory
-cd binance-eod-collector
-
-# Run setup script
-chmod +x setup.sh
-./setup.sh
-
-# Or manually:
-poetry install
+pip install -r requirements.txt
 ```
 
-## Test Run (1 minute)
-
-Test with a small sample of 10 symbols:
+## Step 2: Collect Historical Data (One-Time Setup)
 
 ```bash
-poetry run collect-data --max-symbols 10 --days 30
+python crypto_collector_v2.py historical
 ```
 
-This will:
-- Download data for 10 Binance Spot pairs
-- Fetch last 30 days of historical data
-- Save to `data/all_pairs_eod.csv`
+⏱️ **This will take 2-3 hours** to collect 365 days of data for ~200-300 trading pairs.
 
-## Full Collection (20-30 minutes)
+The script will:
+- ✅ Fetch all USDT pairs from Binance
+- ✅ Map symbols to CoinGecko coin IDs
+- ✅ Download 365 days of price, volume, and market cap data
+- ✅ Save to `data/crypto_data.csv`
+- ✅ Create checkpoints every 50 pairs
 
-Collect ALL Binance Spot pairs:
+**You can safely stop and restart** - symbol mappings are cached!
 
+## Step 3: Run Daily Updates
+
+### Option A: Manual Update
 ```bash
-poetry run collect-data --days 365
+python crypto_collector_v2.py update
 ```
 
-This downloads data for 2000+ trading pairs (takes 20-30 minutes due to rate limiting).
-
-## Daily Updates (30 seconds)
-
-After initial collection, update daily:
-
+### Option B: Automated Scheduler
 ```bash
-poetry run update-data
+# Runs continuously, updates at 1:00 AM daily
+python run_daily_scheduler.py
 ```
 
-## View Results
-
+To test immediately:
 ```bash
-# Check collected data
-head -20 data/all_pairs_eod.csv
-
-# Run example analysis
-poetry run python examples/ml_preprocessing_example.py
+python run_daily_scheduler.py --now
 ```
 
-## Common Use Cases
-
-### Collect USDT pairs only
-
-```bash
-# First, collect all pairs
-poetry run collect-data --days 365
-
-# Then filter in your code:
-import pandas as pd
-df = pd.read_csv('data/all_pairs_eod.csv')
-usdt_pairs = df[df['symbol'].str.endswith('USDT')]
-```
-
-### Collect specific pairs
-
-```bash
-poetry run collect-data --symbols BTCUSDT ETHUSDT BNBUSDT ADAUSDT --days 365
-```
-
-### Update specific pairs
-
-```bash
-poetry run update-data --symbols BTCUSDT ETHUSDT
-```
-
-## Automate Daily Updates
-
-### Linux/Mac (Cron)
-
+### Option C: Cron Job (Linux/Mac)
 ```bash
 # Edit crontab
 crontab -e
 
-# Add this line (runs daily at 00:30 UTC)
-30 0 * * * cd /path/to/binance-eod-collector && poetry run update-data >> data/collector.log 2>&1
+# Add this line (updates at 1:00 AM daily)
+0 1 * * * cd /path/to/project && python3 crypto_collector_v2.py update
 ```
 
-### Windows (Task Scheduler)
+## Step 4: Analyze Your Data
 
-1. Open Task Scheduler
-2. Create Basic Task
-3. Trigger: Daily at 00:30
-4. Action: Start a program
-   - Program: `C:\Users\YourName\AppData\Roaming\Python\Scripts\poetry.exe`
-   - Arguments: `run update-data`
-   - Start in: `C:\path\to\binance-eod-collector`
+```bash
+python example_analysis.py
+```
 
-## Data Format
+This will:
+- 📊 Show top 10 coins by market cap
+- 📈 Calculate 30-day returns for BTC, ETH, BNB
+- 📉 Generate price history charts
+- 📊 Display statistics
 
-Output file: `data/all_pairs_eod.csv`
+## Understanding Your Data
 
-| Column | Description |
-|--------|-------------|
-| date | Trading date (YYYY-MM-DD) |
-| symbol | Trading pair (e.g., BTCUSDT) |
-| open | Opening price |
-| high | Highest price |
-| low | Lowest price |
-| close | Closing price |
-| volume | Base asset volume |
-| quote_volume | Quote asset volume |
-| trades | Number of trades |
-| market_cap_proxy | Price × Volume (liquidity measure) |
+Your data file `data/crypto_data.csv` contains:
 
-## Using in Your ML Model
+```csv
+date,symbol,base_asset,coingecko_id,price,volume,market_cap,timestamp
+2024-01-01,BTCUSDT,BTC,bitcoin,42500.50,28500000000,832500000000,1704067200000
+```
 
+**Quick Python Example:**
 ```python
 import pandas as pd
 
 # Load data
-df = pd.read_csv('data/all_pairs_eod.csv')
+df = pd.read_csv('data/crypto_data.csv')
 df['date'] = pd.to_datetime(df['date'])
 
-# Filter USDT pairs
-usdt = df[df['symbol'].str.endswith('USDT')]
+# Get Bitcoin prices
+btc = df[df['base_asset'] == 'BTC']
 
-# Create price matrix
-prices = usdt.pivot(index='date', columns='symbol', values='close')
+# Get latest prices
+latest = df[df['date'] == df['date'].max()]
 
 # Calculate returns
-returns = prices.pct_change()
+btc_returns = btc.set_index('date')['price'].pct_change()
+```
 
-# Your ML model here...
-# features = create_features(returns)
-# weights = model.predict(features)
+## Common Commands
+
+```bash
+# Collect 365 days of historical data
+python crypto_collector_v2.py historical
+
+# Collect only 90 days
+python crypto_collector_v2.py historical 90
+
+# Daily update
+python crypto_collector_v2.py update
+
+# Run scheduler (updates at 1:00 AM daily)
+python run_daily_scheduler.py
+
+# Test scheduler immediately
+python run_daily_scheduler.py --now
+
+# Analyze data
+python example_analysis.py
 ```
 
 ## Troubleshooting
 
-**Can't connect to Binance:**
-```bash
-# Test connectivity
-poetry run python -c "from binance.client import Client; print(Client().get_server_time())"
-```
+**"No data file found"**
+→ Run historical collection first: `python crypto_collector_v2.py historical`
 
-**Rate limit errors:**
-- Wait a few minutes
-- Increase sleep time in `src/binance_eod_collector/collector.py` (line with `time.sleep(0.5)`)
+**"Rate limited by CoinGecko"**
+→ Script will automatically wait and retry. This is normal.
 
-**No data collected:**
-- Check internet connection
-- Verify Binance is accessible in your region
-- Some symbols may have limited history
+**Script is slow**
+→ CoinGecko free tier allows 30 calls/minute. Full collection takes 2-3 hours.
+
+**Some pairs are missing**
+→ Not all tokens are on CoinGecko. Check logs for failed mappings.
 
 ## Next Steps
 
-1. ✅ Collect data
-2. 📊 Explore with `examples/ml_preprocessing_example.py`
-3. 🤖 Build your ML trading model
-4. 📈 Backtest your strategy
-5. 🚀 Deploy for live trading
+1. ✅ Set up daily automation (cron or scheduler)
+2. ✅ Build your ML models with the data
+3. ✅ Customize analysis scripts
+4. ✅ Consider upgrading to CoinGecko paid tier if you need:
+   - More than 365 days of history
+   - Faster collection (higher rate limits)
+   - More API calls per month
 
-## Need Help?
+## File Structure After Setup
 
-- Check full documentation: [README.md](README.md)
-- Binance API docs: https://binance-docs.github.io/apidocs/spot/en/
-- Python-binance: https://python-binance.readthedocs.io/
+```
+your-project/
+├── crypto_collector_v2.py      # Main collector
+├── run_daily_scheduler.py      # Automation script
+├── example_analysis.py         # Analysis examples
+├── requirements.txt            # Dependencies
+├── README.md                   # Full documentation
+├── QUICKSTART.md              # This file
+├── data/
+│   ├── crypto_data.csv        # Your data! 🎉
+│   ├── symbol_mapping.json    # Cached mappings
+│   └── checkpoint_*.csv       # Progress saves
+└── logs/
+    └── scheduler.log          # Scheduler logs
+```
 
----
+## Support
 
-**Happy Trading! 🎯**
+- 📖 Full docs: See [README.md](README.md)
+- 🔧 CoinGecko API: https://docs.coingecko.com/
+- 🔧 Binance API: https://binance-docs.github.io/apidocs/spot/en/
+
+Happy trading! 🚀

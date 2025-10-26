@@ -127,8 +127,7 @@ class BinanceEODCollector:
             Base symbol (e.g., 'BTC', 'ETH') or None if cannot parse
         """
         # Common quote assets on Binance
-        quote_assets = ['USDT', 'BUSD', 'USDC', 'BTC', 'ETH', 'BNB', 'TRX', 
-                       'XRP', 'TUSD', 'PAX', 'EUR', 'GBP', 'AUD', 'TRY']
+        quote_assets = ['USDT']  # , 'BUSD', 'USDC', 'BTC', 'ETH', 'BNB', 'TRX', 'XRP', 'TUSD', 'PAX', 'EUR', 'GBP', 'AUD', 'TRY']
         
         # Try to match quote asset from the end
         for quote in quote_assets:
