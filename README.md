@@ -1,16 +1,21 @@
 # Binance EOD Data Collector
 
-A Python package for collecting End-of-Day (EOD) cryptocurrency market data from **Binance Spot market** for all trading pairs.
+A Python package for collecting End-of-Day (EOD) cryptocurrency market data using a **hybrid approach**:
+- **Binance API**: OHLCV trading data for all Spot pairs
+- **CoinGecko API**: Market cap and circulating supply data
 
 ## Features
 
-✅ **All Binance Spot Pairs** - Automatically discovers and downloads data for all active trading pairs  
+✅ **Hybrid Data Collection** - Combines Binance trading data with CoinGecko market metrics  
+✅ **All Binance Spot Pairs** - Automatically discovers all active trading pairs  
+✅ **Real Market Cap** - Actual market capitalization from CoinGecko (not proxy)  
+✅ **Supply Metrics** - Circulating, total, and max supply data  
 ✅ **Historical Data** - Download up to 365+ days of historical data  
 ✅ **Daily Updates** - Efficiently update with latest EOD data  
-✅ **No API Keys Required** - Uses public Binance market data endpoints  
-✅ **Rate Limit Handling** - Automatic rate limiting to respect Binance API limits  
-✅ **Market Data** - Collects: Open, High, Low, Close, Volume, Quote Volume  
-✅ **Poetry Management** - Modern Python dependency management with Poetry  
+✅ **Smart Filtering** - Automatically skips pairs not on CoinGecko  
+✅ **No API Keys Required** - Uses public endpoints (API keys optional)  
+✅ **Rate Limit Handling** - Automatic rate limiting for both APIs  
+✅ **Poetry Management** - Modern Python dependency management  
 
 ## Installation
 
@@ -133,13 +138,15 @@ Edit `config.json` to set default values:
 Data is saved to `data/all_pairs_eod.csv`:
 
 ```csv
-date,symbol,open,high,low,close,volume,quote_volume,trades,market_cap_proxy
-2024-01-01,BTCUSDT,42500.00,43000.00,42000.00,42800.00,1500.5,64200000.0,125000,64200000.0
-2024-01-01,ETHUSDT,2250.00,2280.00,2240.00,2270.00,8500.2,19280454.0,98000,19280454.0
+date,symbol,open,high,low,close,volume,quote_volume,trades,market_cap,circulating_supply,total_supply,max_supply
+2024-01-01,BTCUSDT,42500.00,43000.00,42000.00,42800.00,1500.5,64200000.0,125000,832500000000,19845000,19845000,21000000
+2024-01-01,ETHUSDT,2250.00,2280.00,2240.00,2270.00,8500.2,19280454.0,98000,270000000000,120000000,120000000,
 ```
 
 **Columns:**
-- `date`: Trading date
+
+**From Binance (OHLCV Data):**
+- `date`: Trading date (YYYY-MM-DD)
 - `symbol`: Trading pair (e.g., BTCUSDT)
 - `open`: Opening price
 - `high`: Highest price
@@ -148,10 +155,31 @@ date,symbol,open,high,low,close,volume,quote_volume,trades,market_cap_proxy
 - `volume`: Base asset volume
 - `quote_volume`: Quote asset volume (in USDT, BTC, etc.)
 - `trades`: Number of trades
-- `market_cap_proxy`: Close price × Volume (liquidity proxy)
 
-**Important Note on Market Cap:**  
-True market cap requires circulating supply data, which isn't available through Binance API. The `market_cap_proxy` field provides a liquidity measure based on trading activity.
+**From CoinGecko (Market Metrics):**
+- `market_cap`: Market capitalization in USD (= price × circulating_supply)
+- `circulating_supply`: Coins currently in circulation
+- `total_supply`: Total minted supply
+- `max_supply`: Maximum possible supply (null if unlimited)
+
+## Hybrid Approach
+
+This collector uses a **hybrid approach** combining two data sources:
+
+1. **Binance API** → OHLCV trading data (price, volume)
+2. **CoinGecko API** → Market cap and supply data
+
+**Why hybrid?**
+- Binance has the most accurate trading data for its pairs
+- CoinGecko has comprehensive market cap data calculated from circulating supply
+- Both offer generous free tiers
+
+**Symbol Matching:**
+- `BTCUSDT` → Extract `BTC` → Match to CoinGecko's `bitcoin` → Fetch market data
+- Pairs not found on CoinGecko are automatically skipped
+- Typically 80-90% of Binance pairs are matched
+
+For detailed information, see [HYBRID_APPROACH.md](HYBRID_APPROACH.md)
 
 ## Using in Your ML Trading Model
 

@@ -12,7 +12,7 @@ from binance_eod_collector import BinanceEODCollector
 
 def load_config():
     """Load configuration from config.json if it exists"""
-    config_path = Path("config.json")
+    config_path = Path("../config.json")
     if config_path.exists():
         with open(config_path, 'r') as f:
             return json.load(f)
